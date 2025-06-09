@@ -9,4 +9,5 @@ def test_network_forward():
     out = net(agent, reward, obstacles)
     assert out.shape == (1, 4)
     prob = torch.softmax(out, dim=-1)
-    assert torch.isclose(prob.sum(), torch.tensor(1.0), atol=1e-5)
+    target = torch.tensor(1.0, device=prob.device)
+    assert torch.isclose(prob.sum(), target, atol=1e-5)
