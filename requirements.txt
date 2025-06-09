@@ -1,4 +1,4 @@
-torch==2.2.2+cu118
+torch==2.2.2
 tk
 numpy==1.26.4
 matplotlib==3.10.3
