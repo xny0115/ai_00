@@ -12,18 +12,46 @@ from network import SimpleTransformer
 class App:
     FPS = 30
     def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("AI Agent")
+        # 기본 크기로 캔버스 생성. 실제 사이즈는 restart 시 설정
+        self.canvas = tk.Canvas(self.root, width=400, height=300, bg="white")
+        self.canvas.pack()
+
+        # 재시작 버튼 추가
+        self.restart_button = tk.Button(self.root, text="Restart", command=self.restart)
+        self.restart_button.pack()
+
+        self.update_job = None
+        # 초기 환경 설정
+        self.restart()
+
+    def restart(self) -> None:
+        """환경과 상태를 초기화하여 새로 시작"""
+        if self.update_job is not None:
+            self.root.after_cancel(self.update_job)
+
         self.env = Environment()
         self.agent = Agent(20, 20)
         self.net = SimpleTransformer(num_obstacles=len(self.env.obstacles))
-        self.root = tk.Tk()
-        self.root.title("AI Agent")
-        self.canvas = tk.Canvas(self.root, width=self.env.width, height=self.env.height, bg="white")
-        self.canvas.pack()
+
+        # 캔버스 초기화 및 크기 설정
+        self.canvas.delete("all")
+        self.canvas.config(width=self.env.width, height=self.env.height)
         self.draw_static_elements()
+
         self.agent_item = self.canvas.create_oval(0, 0, self.agent.r*2, self.agent.r*2, fill="blue")
         self.reward_item = self.canvas.create_oval(0, 0, self.env.reward.r*2, self.env.reward.r*2, fill="green")
         self.update_reward()
-        self.root.after(int(1000/self.FPS), self.update_loop)
+        self.canvas.coords(
+            self.agent_item,
+            self.agent.x - self.agent.r,
+            self.agent.y - self.agent.r,
+            self.agent.x + self.agent.r,
+            self.agent.y + self.agent.r,
+        )
+
+        self.update_job = self.root.after(int(1000/self.FPS), self.update_loop)
 
     def draw_static_elements(self) -> None:
         """장애물 등 변하지 않는 요소 그리기"""
@@ -77,7 +105,7 @@ class App:
         if ((self.agent.x - self.env.reward.x) ** 2 + (self.agent.y - self.env.reward.y) ** 2) <= (self.agent.r + self.env.reward.r) ** 2:
             self.env.reset_reward()
             self.update_reward()
-        self.root.after(int(1000/self.FPS), self.update_loop)
+        self.update_job = self.root.after(int(1000/self.FPS), self.update_loop)
 
     def run(self) -> None:
         self.root.mainloop()
